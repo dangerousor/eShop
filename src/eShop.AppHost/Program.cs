@@ -16,6 +16,7 @@ var identityDb = postgres.AddDatabase("identitydb");
 var orderDb = postgres.AddDatabase("orderingdb");
 var webhooksDb = postgres.AddDatabase("webhooksdb");
 
+// var openAi = builder.AddAzureOpenAI("openai");
 var launchProfileName = ShouldUseHttpForEndpoints() ? "http" : "https";
 
 // Services
