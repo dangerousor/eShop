@@ -5,7 +5,7 @@
         @{
             var headerImage = IsCatalog ? "images/header-home.webp" : "images/header.webp";
         }
-        <img role="presentation" src="@headerImage" />
+        <img role="presentation" src="@headerImage"  alt=""/>
     </div>
     <div class="eshop-header-container">
         <nav class="eshop-header-navbar">
@@ -14,6 +14,7 @@
             </a>
             
             <UserMenu />
+            <OrderMenu />
             <CartMenu />
         </nav>
         <div class="eshop-header-intro">
