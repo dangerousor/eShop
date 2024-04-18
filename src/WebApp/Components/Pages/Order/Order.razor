@@ -1,9 +1,12 @@
 @page "/order"
+@using ClosedXML.Excel
+@using ClosedXML.Excel.Drawings
 
 @rendermode InteractiveServer
 @attribute [Authorize]
 
 @inject IJSRuntime Js
+@inject IWebHostEnvironment WebHostEnvironment
 
 <PageTitle>Order | Northern Mountains</PageTitle>
 <SectionContent SectionName="page-header-title">Order</SectionContent>
@@ -77,14 +80,12 @@
 @code {
     private EditContext editContext = default!;
     private ValidationMessageStore extraMessages = default!;
-    
-    [SupplyParameterFromForm]
-    private OrderInfo Info { get; set; } = new();
-    
+
+    [SupplyParameterFromForm] private OrderInfo Info { get; set; } = new();
+
     private List<OrderInfo.OrderItem> OrderItems { get; } = [new OrderInfo.OrderItem()];
-    
-    [CascadingParameter]
-    public HttpContext HttpContext { get; set; } = default!;
+
+    [CascadingParameter] public HttpContext HttpContext { get; set; } = default!;
 
     protected override void OnInitialized()
     {
@@ -111,7 +112,7 @@
     private void PerformCustomValidationAsync()
     {
         extraMessages.Clear();
-        
+
         if (OrderItems.Any(x => x.Quantity < 1))
         {
             extraMessages.Add(new FieldIdentifier(OrderItems, ""), "Quantity must be greater than 0");
@@ -122,7 +123,7 @@
     {
         OrderItems.Add(new OrderInfo.OrderItem());
     }
-    
+
     private Stream GetFileStream()
     {
         var randomBinaryData = new byte[50 * 1024];
@@ -139,5 +140,278 @@
         using var streamRef = new DotNetStreamReference(stream: fileStream);
 
         await Js.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+    }
+
+    private void GenerateExcel()
+    {
+        const string filename = @"D:\Code\RiderProjects\Excel\Excel\test.xlsx";
+        const string sheetName = "控制器模块";
+        const string orderNumber = "TMQM20230224";
+        const string supplier = "琦玛控制器";
+        const string orderDate = "2024.4.16";
+        const string completionDate = "2024.4.16";
+        var picture1 = Path.Combine(WebHostEnvironment.WebRootPath, @"images\Picture1.png");
+        var picture2 = Path.Combine(WebHostEnvironment.WebRootPath, @"images\Picture2.png");
+// create workbook
+        var workbook = new XLWorkbook();
+        var worksheet = workbook.AddWorksheet(sheetName);
+
+        worksheet.Column("A").Width = 9.94;
+        worksheet.Column("B").Width = 8.44;
+        worksheet.Column("C").Width = 11.19;
+        worksheet.Column("D").Width = 42.31;
+        worksheet.Column("E").Width = 13.19;
+        worksheet.Column("F").Width = 19.94;
+
+// part1: 标题
+        worksheet.Cell("A1").Value = $"采购订单（{orderNumber}）";
+        worksheet.Cell("A1").Style
+            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+            .Alignment.SetVertical(XLAlignmentVerticalValues.Bottom)
+            .Font.SetFontSize(16);
+        worksheet.Range("A1:F2").Merge().Style
+            .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+        worksheet.Row(2).Height = 50;
+
+        var p1 = worksheet.AddPicture(picture1)
+            .WithPlacement(XLPicturePlacement.FreeFloating)
+            .Scale(0.5, true);
+        p1.Left = 10;
+        p1.Top = 10;
+
+        var p2 = worksheet.AddPicture(picture2)
+            .WithPlacement(XLPicturePlacement.FreeFloating);
+        p2.Left = 100;
+
+// part2: 厂商名称
+// Row3
+        worksheet.Range("A3:D3").Merge().Style
+            .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+        worksheet.Cell("A3").Value = $"厂商名称：{supplier}";
+
+// part3: 下单日期
+// E3
+        {
+            var cell = worksheet.Cell("E3");
+            cell.Value = "下单日期：";
+            cell.Style
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+        }
+
+// part4: 下单日期填写
+// F3
+        {
+            var cell = worksheet.Cell("F3");
+            cell.Value = $"{orderDate}";
+            cell.Style
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+        }
+
+// part5: 厂商地址
+// A4:D4
+        {
+            worksheet.Range("A4:D4").Merge()
+                .Style
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            var cell = worksheet.Cell("A4");
+            cell.Value = "厂商地址：";
+        }
+
+// part6: 交货日期
+// E4
+        {
+            var cell = worksheet.Cell("E4");
+            cell.Style
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            cell.Value = "交货日期：";
+        }
+
+// part7: 交货日期填写
+// F4
+        {
+            var cell = worksheet.Cell("F4");
+            cell.Style
+                .Font.SetFontColor(XLColor.Red)
+                .Font.SetBold()
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            cell.Value = $"{completionDate}";
+        }
+
+        {
+            var cell = worksheet.Cell("A5");
+            cell.Style
+                .Font.SetFontName("宋体")
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            cell.Value = "序号";
+        }
+
+        {
+            worksheet.Range("B5:C5").Merge()
+                .Style
+                .Font.SetFontName("宋体")
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            var cell = worksheet.Cell("B5");
+            cell.Value = "名称";
+        }
+
+        {
+            var cell = worksheet.Cell("D5");
+            cell.Style
+                .Font.SetFontName("宋体")
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            cell.Value = "要求描述";
+        }
+
+        {
+            var cell = worksheet.Cell("E5");
+            cell.Style
+                .Font.SetFontName("宋体")
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            cell.Value = "数量";
+        }
+
+        {
+            var cell = worksheet.Cell("F5");
+            cell.Style
+                .Font.SetFontName("宋体")
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            cell.Value = "备注";
+        }
+
+        void AddItems(IEnumerable<ItemInfo> items)
+        {
+            var index = 1;
+            foreach (var item in items)
+            {
+                var row = index + 5;
+
+                {
+                    var cell = worksheet.Cell($"A{row}");
+                    cell.Style
+                        .Fill.SetBackgroundColor(XLColor.Yellow)
+                        .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                        .Alignment.SetVertical(XLAlignmentVerticalValues.Center)
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    cell.Value = index;
+                }
+
+                {
+                    worksheet.Range($"B{row}:C{row}").Merge()
+                        .Style
+                        .Font.SetBold()
+                        .Alignment.SetVertical(XLAlignmentVerticalValues.Center)
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                        .Fill.SetBackgroundColor(XLColor.Yellow)
+                        .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+                    var cell = worksheet.Cell($"B{row}");
+                    cell.Value = "控制器";
+                }
+
+                {
+                    var cell = worksheet.Cell($"D{row}");
+                    cell.Style
+                        .Font.SetFontSize(14)
+                        .Font.SetBold()
+                        .Alignment.SetWrapText()
+                        .Fill.SetBackgroundColor(XLColor.Yellow)
+                        .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                        .Alignment.SetVertical(XLAlignmentVerticalValues.Center);
+                    cell.Value = item.Description;
+                }
+
+                {
+                    var cell = worksheet.Cell($"E{row}");
+                    cell.Style
+                        .Font.SetFontSize(20)
+                        .Font.SetFontColor(XLColor.Red)
+                        .Font.SetBold()
+                        .Fill.SetBackgroundColor(XLColor.Yellow)
+                        .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                        .Alignment.SetVertical(XLAlignmentVerticalValues.Center)
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    cell.Value = item.Quantity;
+                }
+
+                {
+                    var cell = worksheet.Cell($"F{row}");
+                    cell.Style
+                        .Font.SetFontSize(20)
+                        .Font.SetFontColor(XLColor.Red)
+                        .Font.SetBold()
+                        .Alignment.SetWrapText()
+                        .Fill.SetBackgroundColor(XLColor.Yellow)
+                        .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                        .Alignment.SetVertical(XLAlignmentVerticalValues.Center)
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    cell.Value = item.Comment;
+                }
+            }
+        }
+
+        var items = new[]
+        {
+            new ItemInfo
+            {
+                Description = "透明控制器\"控制器规格  型号:72V 72400S ，电流80A、拨动三速、默认P档、一线通、一键修复、巡航、倒车、刹车能量回收。\"\n",
+                Comment = "配2000W    全顺电机  H1用",
+                Quantity = 189,
+            }
+        };
+
+        AddItems(items);
+
+        var footerStartRow = 6 + items.Length;
+
+        {
+            var cell = worksheet.Cell($"A{footerStartRow}");
+            cell.Style
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            cell.Value = "合计：";
+        }
+
+        {
+            worksheet.Range($"B{footerStartRow}:F{footerStartRow}").Merge()
+                .Style
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+        }
+
+        {
+            var row = footerStartRow + 1;
+            worksheet.Range($"A{row}:F{row}").Merge()
+                .Style
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            var cell = worksheet.Cell($"A{row}");
+            cell.Value = "备注：";
+        }
+
+        {
+            var row = footerStartRow + 2;
+            var cell = worksheet.Cell($"A{row}");
+            cell.Value = "1.交货时间：收到订单之日请在交货期内将订货产品交至交货地址\n2.交货地址：无锡市锡山区厚桥街道胶山路1101号五星工业园4号厂房\n3.联系电话：13198899660";
+            worksheet.Row(row).AdjustToContents();
+            var range = worksheet.Range($"A{row}:F{row}").Merge();
+            range.Style
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                .Alignment.SetWrapText();
+        }
+
+        {
+            var row = footerStartRow + 3;
+            worksheet.Range($"A{row}:F{row}").Merge()
+                .Style
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                .Alignment.SetWrapText();
+            var cell = worksheet.Cell($"A{row}");
+            cell.Value = "采购员：雷欣                                                                                      厂商代表：";
+        }
+
+        workbook.SaveAs(filename);
+    }
+
+    private struct ItemInfo
+    {
+        public string Description;
+        public int Quantity;
+        public string Comment;
     }
 }
