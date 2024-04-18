@@ -1,14 +1,143 @@
 @page "/order"
+
+@rendermode InteractiveServer
 @attribute [Authorize]
-@attribute [StreamRendering]
+
+@inject IJSRuntime Js
 
 <PageTitle>Order | Northern Mountains</PageTitle>
 <SectionContent SectionName="page-header-title">Order</SectionContent>
 
 <div class="order">
-    <p>Order</p>
+    <EditForm EditContext="@editContext" FormName="checkout" OnSubmit="@HandleSubmitAsync" Enhance>
+        <div class="form">
+            <div class="form-section">
+                <h2>Order Information</h2>
+                <label>
+                    <span>Order number</span>
+                    <InputText @bind-Value="@Info.OrderNumber"/>
+                </label>
+                <div class="form-group">
+                    <div class="form-group-item">
+                        <label>
+                            <span>Order date</span>
+                            <InputDate @bind-Value="@Info.OrderDate"/>
+                        </label>
+                    </div>
+                    <div class="form-group-item">
+                        <label>
+                            <span>Completion date</span>
+                            <InputDate @bind-Value="@Info.CompletionDate"/>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Index</th>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Comment</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in OrderItems)
+                {
+                <tr>
+                    <td align="center">
+                        <span>@item.Index</span>
+                    </td>
+                    <td align="center">
+                        <InputTextArea @bind-Value="@item.Description" placeholder="Input the description..." />
+                    </td>
+                    <td align="center">
+                        <InputNumber @bind-Value="@item.Quantity" min="1" />
+                    </td>
+                    <td align="center">
+                        <InputTextArea @bind-Value="item.Comment" placeholder="Input comments..." />
+                    </td>
+                </tr>
+                }
+                </tbody>
+            </table>
+
+            <button class="button button-secondary" type="button" @onclick="Callback">Add item</button>
+
+            <div class="form-section">
+                <div class="form-buttons">
+                    <button class="button button-primary" type="submit">Place order (Download Excel)</button>
+                </div>
+            </div>
+        </div>
+    </EditForm>
 </div>
 
 @code {
+    private EditContext editContext = default!;
+    private ValidationMessageStore extraMessages = default!;
     
+    [SupplyParameterFromForm]
+    private OrderInfo Info { get; set; } = new();
+    
+    private List<OrderInfo.OrderItem> OrderItems { get; } = [new OrderInfo.OrderItem()];
+    
+    [CascadingParameter]
+    public HttpContext HttpContext { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(Info!);
+        extraMessages = new ValidationMessageStore(editContext);
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        PerformCustomValidationAsync();
+
+        if (editContext.Validate())
+        {
+            await HandleValidSubmitAsync();
+        }
+    }
+
+    private async Task HandleValidSubmitAsync()
+    {
+        await Task.Delay(10);
+        await DownloadFileFromStream();
+    }
+
+    private void PerformCustomValidationAsync()
+    {
+        extraMessages.Clear();
+        
+        if (OrderItems.Any(x => x.Quantity < 1))
+        {
+            extraMessages.Add(new FieldIdentifier(OrderItems, ""), "Quantity must be greater than 0");
+        }
+    }
+
+    private void Callback()
+    {
+        OrderItems.Add(new OrderInfo.OrderItem());
+    }
+    
+    private Stream GetFileStream()
+    {
+        var randomBinaryData = new byte[50 * 1024];
+        var fileStream = new MemoryStream(randomBinaryData);
+
+        return fileStream;
+    }
+
+    private async Task DownloadFileFromStream()
+    {
+        var fileStream = GetFileStream();
+        var fileName = "log.bin";
+
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+        await Js.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+    }
 }

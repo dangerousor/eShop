@@ -35,6 +35,7 @@ public static class HttpClientExtensions
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            // TODO: Add logging here
             if (_httpContextAccessor.HttpContext is HttpContext context)
             {
                 var accessToken = await context.GetTokenAsync("access_token");
