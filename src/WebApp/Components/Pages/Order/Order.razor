@@ -1,4 +1,6 @@
 @page "/order"
+
+@using System.Text
 @using ClosedXML.Excel
 @using ClosedXML.Excel.Drawings
 
@@ -121,37 +123,39 @@
 
     private void Callback()
     {
-        OrderItems.Add(new OrderInfo.OrderItem());
+        OrderItems.Add(new OrderInfo.OrderItem
+        {
+            Index = OrderItems.Last().Index + 1,
+        });
     }
 
     private Stream GetFileStream()
     {
-        var randomBinaryData = new byte[50 * 1024];
-        var fileStream = new MemoryStream(randomBinaryData);
-
-        return fileStream;
+        var stream = GenerateExcel(Info, OrderItems);
+        stream.Position = 0;
+        return stream;
     }
 
     private async Task DownloadFileFromStream()
     {
         var fileStream = GetFileStream();
-        var fileName = "log.bin";
-
+        var fileName = $"控制器模块{Info.OrderNumber}.xlsx";
+        // var fileName = "test1.txt";
+        
         using var streamRef = new DotNetStreamReference(stream: fileStream);
 
         await Js.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
 
-    private void GenerateExcel()
+    private Stream GenerateExcel(OrderInfo orderInfo, IEnumerable<OrderInfo.OrderItem> orderItems)
     {
-        const string filename = @"D:\Code\RiderProjects\Excel\Excel\test.xlsx";
         const string sheetName = "控制器模块";
-        const string orderNumber = "TMQM20230224";
+        var orderNumber = orderInfo.OrderNumber;
         const string supplier = "琦玛控制器";
-        const string orderDate = "2024.4.16";
-        const string completionDate = "2024.4.16";
-        var picture1 = Path.Combine(WebHostEnvironment.WebRootPath, @"images\Picture1.png");
-        var picture2 = Path.Combine(WebHostEnvironment.WebRootPath, @"images\Picture2.png");
+        var orderDate = orderInfo.OrderDate.ToString("yyyy.MM.dd");
+        var completionDate = orderInfo.CompletionDate.ToString("yyyy.MM.dd");
+        var picture1 = Path.Combine(WebHostEnvironment.WebRootPath, "images/Picture1.png");
+        var picture2 = Path.Combine(WebHostEnvironment.WebRootPath, "images/Picture2.png");
 // create workbook
         var workbook = new XLWorkbook();
         var worksheet = workbook.AddWorksheet(sheetName);
@@ -348,15 +352,21 @@
             }
         }
 
-        var items = new[]
+        // var items = new[]
+        // {
+        //     new ItemInfo
+        //     {
+        //         Description = "透明控制器\"控制器规格  型号:72V 72400S ，电流80A、拨动三速、默认P档、一线通、一键修复、巡航、倒车、刹车能量回收。\"\n",
+        //         Comment = "配2000W    全顺电机  H1用",
+        //         Quantity = 189,
+        //     }
+        // };
+        var items = orderItems.Select((x, i) => new ItemInfo
         {
-            new ItemInfo
-            {
-                Description = "透明控制器\"控制器规格  型号:72V 72400S ，电流80A、拨动三速、默认P档、一线通、一键修复、巡航、倒车、刹车能量回收。\"\n",
-                Comment = "配2000W    全顺电机  H1用",
-                Quantity = 189,
-            }
-        };
+            Description = x.Description,
+            Comment = x.Comment,
+            Quantity = x.Quantity,
+        }).ToArray();
 
         AddItems(items);
 
@@ -404,8 +414,10 @@
             var cell = worksheet.Cell($"A{row}");
             cell.Value = "采购员：雷欣                                                                                      厂商代表：";
         }
-
-        workbook.SaveAs(filename);
+        
+        var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return stream;
     }
 
     private struct ItemInfo
