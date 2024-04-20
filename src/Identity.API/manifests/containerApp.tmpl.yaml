@@ -10,7 +10,7 @@ properties:
     activeRevisionsMode: single
     ingress:
       external: true
-      targetPort: 8080
+      targetPort: {{ targetPortOrDefault 8080 }}
       transport: http
       allowInsecure: false
     registries:
@@ -18,7 +18,7 @@ properties:
       identity: {{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}
     secrets:
       - name: connectionstrings--identitydb
-        value: '{{ connectionString "identitydb" }}'
+        value: Host=postgres;Port=5432;Username=postgres;Password={{ securedParameter "postgres_password" }};Database=identitydb
   template:
     containers:
     - image: {{ .Image }}
@@ -29,19 +29,19 @@ properties:
       - name: ASPNETCORE_FORWARDEDHEADERS_ENABLED
         value: "true"
       - name: BasketApiClient
-        value: http://basket-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+        value: http://basket-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES
         value: "true"
       - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES
         value: "true"
       - name: OrderingApiClient
-        value: http://ordering-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+        value: http://ordering-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: WebAppClient
         value: https://webapp.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: WebhooksApiClient
-        value: http://webhooks-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+        value: http://webhooks-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: WebhooksWebClient
-        value: https://webhooksclient.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+        value: https://webhooksclient.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: ConnectionStrings__identitydb
         secretRef: connectionstrings--identitydb
     scale:

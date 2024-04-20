@@ -3,11 +3,12 @@ param location string = resourceGroup().location
 
 @description('Tags that will be applied to all resources')
 param tags object = {}
-@secure()
-param inputs object
-
 
 var resourceToken = uniqueString(resourceGroup().id)
+@secure()
+param eventbus_password string
+@secure()
+param postgres_password string
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'mi-${resourceToken}'
@@ -78,8 +79,8 @@ resource eventbus 'Microsoft.App/containerApps@2023-05-02-preview' = {
       secrets: [
         {
           name: 'rabbitmq-default-pass'
-          value: inputs.eventbus.password
-        }    
+          value: eventbus_password
+        }
       ]
     }
     template: {
@@ -122,8 +123,8 @@ resource postgres 'Microsoft.App/containerApps@2023-05-02-preview' = {
       secrets: [
         {
           name: 'postgres-password'
-          value: inputs.postgres.password
-        }    
+          value: postgres_password
+        }
       ]
     }
     template: {
@@ -139,6 +140,10 @@ resource postgres 'Microsoft.App/containerApps@2023-05-02-preview' = {
             {
               name: 'POSTGRES_INITDB_ARGS'
               value: '--auth-host=scram-sha-256 --auth-local=scram-sha-256'
+            }
+            {
+              name: 'POSTGRES_USER'
+              value: 'postgres'
             }
             {
               name: 'POSTGRES_PASSWORD'
@@ -171,7 +176,7 @@ resource redis 'Microsoft.App/containerApps@2023-05-02-preview' = {
     template: {
       containers: [
         {
-          image: 'redis:latest'
+          image: 'redis:7.2.4'
           name: 'redis'
         }
       ]

@@ -7,6 +7,7 @@
       "launchBrowser": true,
       "applicationUrl": "https://localhost:19888;http://localhost:18848",
       "environmentVariables": {
+        "ESHOP_USE_HTTP_ENDPOINTS": "1",
         "ASPNETCORE_ENVIRONMENT": "Development",
         "DOTNET_ENVIRONMENT": "Development",
         "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:18076",

@@ -9,8 +9,8 @@ properties:
   configuration:
     activeRevisionsMode: single
     ingress:
-      external: true
-      targetPort: 8080
+      external: false
+      targetPort: {{ targetPortOrDefault 8080 }}
       transport: http2
       allowInsecure: true
     registries:
@@ -18,7 +18,7 @@ properties:
       identity: {{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}
     secrets:
       - name: connectionstrings--eventbus
-        value: amqp://guest:{{ index .Inputs `eventbus` `password` }}@eventbus:5672
+        value: amqp://guest:{{ securedParameter "eventbus_password" }}@eventbus:5672
       - name: connectionstrings--redis
         value: redis:6379
   template:

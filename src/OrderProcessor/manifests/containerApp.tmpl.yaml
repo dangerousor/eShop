@@ -10,7 +10,7 @@ properties:
     activeRevisionsMode: single
     ingress:
       external: false
-      targetPort: 8080
+      targetPort: {{ targetPortOrDefault 8080 }}
       transport: http
       allowInsecure: true
     registries:
@@ -18,9 +18,9 @@ properties:
       identity: {{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}
     secrets:
       - name: connectionstrings--eventbus
-        value: amqp://guest:{{ index .Inputs `eventbus` `password` }}@eventbus:5672
+        value: amqp://guest:{{ securedParameter "eventbus_password" }}@eventbus:5672
       - name: connectionstrings--orderingdb
-        value: '{{ connectionString "orderingdb" }}'
+        value: Host=postgres;Port=5432;Username=postgres;Password={{ securedParameter "postgres_password" }};Database=orderingdb
   template:
     containers:
     - image: {{ .Image }}

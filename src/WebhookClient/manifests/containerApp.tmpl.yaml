@@ -9,10 +9,10 @@ properties:
   configuration:
     activeRevisionsMode: single
     ingress:
-      external: true
-      targetPort: 8080
+      external: false
+      targetPort: {{ targetPortOrDefault 8080 }}
       transport: http
-      allowInsecure: false
+      allowInsecure: true
     registries:
     - server: {{ .Env.AZURE_CONTAINER_REGISTRY_ENDPOINT }}
       identity: {{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}
@@ -26,17 +26,17 @@ properties:
       - name: ASPNETCORE_FORWARDEDHEADERS_ENABLED
         value: "true"
       - name: CallBackUrl
-        value: https://webhooksclient.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+        value: https://webhooksclient.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: IdentityUrl
         value: https://identity-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES
         value: "true"
       - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES
         value: "true"
-      - name: services__webhooks-api__0
-        value: http://webhooks-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: services__webhooks-api__1
-        value: https://webhooks-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+      - name: services__webhooks-api__http__0
+        value: http://webhooks-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+      - name: services__webhooks-api__https__0
+        value: https://webhooks-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
     scale:
       minReplicas: 1
 tags:

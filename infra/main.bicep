@@ -9,20 +9,20 @@ param environmentName string
 @description('The location used for all deployed resources')
 param location string
 
-@secure()
 @metadata({azd: {
-  type: 'inputs'
-  autoGenerate: {
-    eventbus: {
-      password: { len: 10 }
-    }
-    postgres: {
-      password: { len: 10 }
-    }
-  }}
+  type: 'generate'
+  config: {length:22,noSpecial:true}
+  }
 })
-param inputs object
-
+@secure()
+param eventbus_password string
+@metadata({azd: {
+  type: 'generate'
+  config: {length:22}
+  }
+})
+@secure()
+param postgres_password string
 
 var tags = {
   'azd-env-name': environmentName
@@ -40,7 +40,8 @@ module resources 'resources.bicep' = {
   params: {
     location: location
     tags: tags
-    inputs: inputs
+    eventbus_password: eventbus_password
+    postgres_password: postgres_password
   }
 }
 

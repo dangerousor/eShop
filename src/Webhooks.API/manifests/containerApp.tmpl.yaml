@@ -9,18 +9,18 @@ properties:
   configuration:
     activeRevisionsMode: single
     ingress:
-      external: true
-      targetPort: 8080
+      external: false
+      targetPort: {{ targetPortOrDefault 8080 }}
       transport: http
-      allowInsecure: false
+      allowInsecure: true
     registries:
     - server: {{ .Env.AZURE_CONTAINER_REGISTRY_ENDPOINT }}
       identity: {{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}
     secrets:
       - name: connectionstrings--eventbus
-        value: amqp://guest:{{ index .Inputs `eventbus` `password` }}@eventbus:5672
+        value: amqp://guest:{{ securedParameter "eventbus_password" }}@eventbus:5672
       - name: connectionstrings--webhooksdb
-        value: '{{ connectionString "webhooksdb" }}'
+        value: Host=postgres;Port=5432;Username=postgres;Password={{ securedParameter "postgres_password" }};Database=webhooksdb
   template:
     containers:
     - image: {{ .Image }}

@@ -10,7 +10,7 @@ properties:
     activeRevisionsMode: single
     ingress:
       external: true
-      targetPort: 8080
+      targetPort: {{ targetPortOrDefault 8080 }}
       transport: http
       allowInsecure: false
     registries:
@@ -18,7 +18,7 @@ properties:
       identity: {{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}
     secrets:
       - name: connectionstrings--eventbus
-        value: amqp://guest:{{ index .Inputs `eventbus` `password` }}@eventbus:5672
+        value: amqp://guest:{{ securedParameter "eventbus_password" }}@eventbus:5672
   template:
     containers:
     - image: {{ .Image }}
@@ -36,18 +36,18 @@ properties:
         value: "true"
       - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES
         value: "true"
-      - name: services__basket-api__0
-        value: http://basket-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: services__basket-api__1
-        value: https://basket-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: services__catalog-api__0
-        value: http://catalog-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: services__catalog-api__1
-        value: https://catalog-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: services__ordering-api__0
-        value: http://ordering-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: services__ordering-api__1
-        value: https://ordering-api.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+      - name: services__basket-api__http__0
+        value: http://basket-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+      - name: services__basket-api__https__0
+        value: https://basket-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+      - name: services__catalog-api__http__0
+        value: http://catalog-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+      - name: services__catalog-api__https__0
+        value: https://catalog-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+      - name: services__ordering-api__http__0
+        value: http://ordering-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
+      - name: services__ordering-api__https__0
+        value: https://ordering-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: ConnectionStrings__eventbus
         secretRef: connectionstrings--eventbus
     scale:
