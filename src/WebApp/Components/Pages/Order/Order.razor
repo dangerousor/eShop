@@ -1,6 +1,5 @@
 @page "/order"
 
-@using System.Text
 @using ClosedXML.Excel
 @using ClosedXML.Excel.Drawings
 
@@ -147,7 +146,7 @@
         await Js.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
 
-    private Stream GenerateExcel(OrderInfo orderInfo, IEnumerable<OrderInfo.OrderItem> orderItems)
+    private Stream GenerateExcel(OrderInfo orderInfo, List<OrderInfo.OrderItem> orderItems)
     {
         const string sheetName = "控制器模块";
         var orderNumber = orderInfo.OrderNumber;
@@ -282,12 +281,11 @@
             cell.Value = "备注";
         }
 
-        void AddItems(IEnumerable<ItemInfo> items)
+        void AddItems(IEnumerable<OrderInfo.OrderItem> items)
         {
-            var index = 1;
             foreach (var item in items)
             {
-                var row = index + 5;
+                var row = item.Index + 5;
 
                 {
                     var cell = worksheet.Cell($"A{row}");
@@ -296,7 +294,7 @@
                         .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
                         .Alignment.SetVertical(XLAlignmentVerticalValues.Center)
                         .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-                    cell.Value = index;
+                    cell.Value = item.Index;
                 }
 
                 {
@@ -361,16 +359,10 @@
         //         Quantity = 189,
         //     }
         // };
-        var items = orderItems.Select((x, i) => new ItemInfo
-        {
-            Description = x.Description,
-            Comment = x.Comment,
-            Quantity = x.Quantity,
-        }).ToArray();
 
-        AddItems(items);
+        AddItems(orderItems);
 
-        var footerStartRow = 6 + items.Length;
+        var footerStartRow = 6 + orderItems.Count;
 
         {
             var cell = worksheet.Cell($"A{footerStartRow}");
@@ -418,12 +410,5 @@
         var stream = new MemoryStream();
         workbook.SaveAs(stream);
         return stream;
-    }
-
-    private struct ItemInfo
-    {
-        public string Description;
-        public int Quantity;
-        public string Comment;
     }
 }
