@@ -28,8 +28,6 @@ properties:
         value: {{ .Env.MANAGED_IDENTITY_CLIENT_ID }}
       - name: ASPNETCORE_FORWARDEDHEADERS_ENABLED
         value: "true"
-      - name: BasketApiClient
-        value: http://basket-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES
         value: "true"
       - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES
@@ -38,10 +36,6 @@ properties:
         value: http://ordering-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: WebAppClient
         value: https://webapp.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: WebhooksApiClient
-        value: http://webhooks-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: WebhooksWebClient
-        value: https://webhooksclient.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: ConnectionStrings__identitydb
         secretRef: connectionstrings--identitydb
     scale:

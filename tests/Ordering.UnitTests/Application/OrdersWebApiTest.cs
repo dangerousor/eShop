@@ -19,68 +19,7 @@ public class OrdersWebApiTest
         _identityServiceMock = Substitute.For<IIdentityService>();
         _loggerMock = Substitute.For<ILogger<OrderServices>>();
     }
-
-    [Fact]
-    public async Task Cancel_order_with_requestId_success()
-    {
-        // Arrange
-        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CancelOrderCommand, bool>>(), default)
-            .Returns(Task.FromResult(true));
-
-        // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
-        var result = await OrdersApi.CancelOrderAsync(Guid.NewGuid(), new CancelOrderCommand(1), orderServices);
-
-        // Assert
-        Assert.IsType<Ok>(result.Result);
-    }
-
-    [Fact]
-    public async Task Cancel_order_bad_request()
-    {
-        // Arrange
-        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CancelOrderCommand, bool>>(), default)
-            .Returns(Task.FromResult(true));
-
-        // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
-        var result = await OrdersApi.CancelOrderAsync(Guid.Empty, new CancelOrderCommand(1), orderServices);
-
-        // Assert
-        Assert.IsType<BadRequest<string>>(result.Result);
-    }
-
-    [Fact]
-    public async Task Ship_order_with_requestId_success()
-    {
-        // Arrange
-        _mediatorMock.Send(Arg.Any<IdentifiedCommand<ShipOrderCommand, bool>>(), default)
-            .Returns(Task.FromResult(true));
-
-        // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
-        var result = await OrdersApi.ShipOrderAsync(Guid.NewGuid(), new ShipOrderCommand(1), orderServices);
-
-        // Assert
-        Assert.IsType<Ok>(result.Result);
-
-    }
-
-    [Fact]
-    public async Task Ship_order_bad_request()
-    {
-        // Arrange
-        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default)
-            .Returns(Task.FromResult(true));
-
-        // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
-        var result = await OrdersApi.ShipOrderAsync(Guid.Empty, new ShipOrderCommand(1), orderServices);
-
-        // Assert
-        Assert.IsType<BadRequest<string>>(result.Result);
-    }
-
+    
     [Fact]
     public async Task Get_orders_success()
     {

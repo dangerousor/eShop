@@ -1,6 +1,4 @@
-﻿using eShop.IntegrationEventLogEF;
-
-namespace eShop.Ordering.Infrastructure;
+﻿namespace eShop.Ordering.Infrastructure;
 
 /// <remarks>
 /// Add migrations using the following command inside the 'Ordering.Infrastructure' project directory:
@@ -41,7 +39,6 @@ public class OrderingContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new OrderItemEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new CardTypeEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new BuyerEntityTypeConfiguration());
-        modelBuilder.UseIntegrationEventLogs();
     }
 
     public async Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default)

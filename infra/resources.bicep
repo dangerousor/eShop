@@ -6,8 +6,6 @@ param tags object = {}
 
 var resourceToken = uniqueString(resourceGroup().id)
 @secure()
-param eventbus_password string
-@secure()
 param postgres_password string
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
@@ -64,50 +62,6 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' 
   tags: tags
 }
 
-resource eventbus 'Microsoft.App/containerApps@2023-05-02-preview' = {
-  name: 'eventbus'
-  location: location
-  properties: {
-    environmentId: containerAppEnvironment.id
-    configuration: {
-      activeRevisionsMode: 'Single'
-      ingress: {
-        external: false
-        targetPort: 5672
-        transport: 'tcp'
-      }
-      secrets: [
-        {
-          name: 'rabbitmq-default-pass'
-          value: eventbus_password
-        }
-      ]
-    }
-    template: {
-      containers: [
-        {
-          image: 'rabbitmq:3'
-          name: 'eventbus'
-          env: [
-            {
-              name: 'RABBITMQ_DEFAULT_USER'
-              value: 'guest'
-            }
-            {
-              name: 'RABBITMQ_DEFAULT_PASS'
-              secretRef: 'rabbitmq-default-pass'
-            }
-          ]
-        }
-      ]
-      scale: {
-        minReplicas: 1
-      }
-    }
-  }
-  tags: union(tags, {'aspire-resource-name': 'eventbus'})
-}
-
 resource postgres 'Microsoft.App/containerApps@2023-05-02-preview' = {
   name: 'postgres'
   location: location
@@ -158,34 +112,6 @@ resource postgres 'Microsoft.App/containerApps@2023-05-02-preview' = {
     }
   }
   tags: union(tags, {'aspire-resource-name': 'postgres'})
-}
-
-resource redis 'Microsoft.App/containerApps@2023-05-02-preview' = {
-  name: 'redis'
-  location: location
-  properties: {
-    environmentId: containerAppEnvironment.id
-    configuration: {
-      activeRevisionsMode: 'Single'
-      ingress: {
-        external: false
-        targetPort: 6379
-        transport: 'tcp'
-      }
-    }
-    template: {
-      containers: [
-        {
-          image: 'redis:7.2.4'
-          name: 'redis'
-        }
-      ]
-      scale: {
-        minReplicas: 1
-      }
-    }
-  }
-  tags: union(tags, {'aspire-resource-name': 'redis'})
 }
 
 output MANAGED_IDENTITY_CLIENT_ID string = managedIdentity.properties.clientId

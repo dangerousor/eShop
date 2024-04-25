@@ -55,21 +55,6 @@ public abstract class IdentifiedCommandHandler<T, R> : IRequestHandler<Identifie
 
                 switch (command)
                 {
-                    case CreateOrderCommand createOrderCommand:
-                        idProperty = nameof(createOrderCommand.UserId);
-                        commandId = createOrderCommand.UserId;
-                        break;
-
-                    case CancelOrderCommand cancelOrderCommand:
-                        idProperty = nameof(cancelOrderCommand.OrderNumber);
-                        commandId = $"{cancelOrderCommand.OrderNumber}";
-                        break;
-
-                    case ShipOrderCommand shipOrderCommand:
-                        idProperty = nameof(shipOrderCommand.OrderNumber);
-                        commandId = $"{shipOrderCommand.OrderNumber}";
-                        break;
-
                     default:
                         idProperty = "Id?";
                         commandId = "n/a";

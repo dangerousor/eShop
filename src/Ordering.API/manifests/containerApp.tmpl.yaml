@@ -17,8 +17,6 @@ properties:
     - server: {{ .Env.AZURE_CONTAINER_REGISTRY_ENDPOINT }}
       identity: {{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}
     secrets:
-      - name: connectionstrings--eventbus
-        value: amqp://guest:{{ securedParameter "eventbus_password" }}@eventbus:5672
       - name: connectionstrings--orderingdb
         value: Host=postgres;Port=5432;Username=postgres;Password={{ securedParameter "postgres_password" }};Database=orderingdb
   template:
@@ -36,8 +34,6 @@ properties:
         value: "true"
       - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES
         value: "true"
-      - name: ConnectionStrings__eventbus
-        secretRef: connectionstrings--eventbus
       - name: ConnectionStrings__orderingdb
         secretRef: connectionstrings--orderingdb
     scale:

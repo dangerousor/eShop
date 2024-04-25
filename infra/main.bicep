@@ -11,13 +11,6 @@ param location string
 
 @metadata({azd: {
   type: 'generate'
-  config: {length:22,noSpecial:true}
-  }
-})
-@secure()
-param eventbus_password string
-@metadata({azd: {
-  type: 'generate'
   config: {length:22}
   }
 })
@@ -40,7 +33,6 @@ module resources 'resources.bicep' = {
   params: {
     location: location
     tags: tags
-    eventbus_password: eventbus_password
     postgres_password: postgres_password
   }
 }

@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.SemanticKernel;
-using eShop.WebAppComponents.Services;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.ChatCompletion;
 
@@ -11,22 +10,16 @@ namespace eShop.WebApp.Chatbot;
 
 public class ChatState
 {
-    private readonly CatalogService _catalogService;
-    private readonly BasketState _basketState;
     private readonly ClaimsPrincipal _user;
     private readonly NavigationManager _navigationManager;
     private readonly ILogger _logger;
     private readonly Kernel _kernel;
-    private readonly IProductImageUrlProvider _productImages;
     private readonly OpenAIPromptExecutionSettings _aiSettings = new() { ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions };
 
-    public ChatState(CatalogService catalogService, BasketState basketState, ClaimsPrincipal user, NavigationManager nav, IProductImageUrlProvider productImages, Kernel kernel, ILoggerFactory loggerFactory)
+    public ChatState(ClaimsPrincipal user, NavigationManager nav, Kernel kernel, ILoggerFactory loggerFactory)
     {
-        _catalogService = catalogService;
-        _basketState = basketState;
         _user = user;
         _navigationManager = nav;
-        _productImages = productImages;
         _logger = loggerFactory.CreateLogger(typeof(ChatState));
 
         if (_logger.IsEnabled(LogLevel.Debug))
@@ -100,59 +93,7 @@ public class ChatState
             static string GetValue(IEnumerable<Claim> claims, string claimType) =>
                 claims.FirstOrDefault(x => x.Type == claimType)?.Value ?? "";
         }
-
-        [KernelFunction, Description("Searches the Northern Mountains catalog for a provided product description")]
-        public async Task<string> SearchCatalog([Description("The product description for which to search")] string productDescription)
-        {
-            try
-            {
-                var results = await chatState._catalogService.GetCatalogItemsWithSemanticRelevance(0, 8, productDescription!);
-                for (int i = 0; i < results.Data.Count; i++)
-                {
-                    results.Data[i] = results.Data[i] with { PictureUrl = chatState._productImages.GetProductImageUrl(results.Data[i].Id) };
-                }
-
-                return JsonSerializer.Serialize(results);
-            }
-            catch (HttpRequestException e)
-            {
-                return Error(e, "Error accessing catalog.");
-            }
-        }
-
-        [KernelFunction, Description("Adds a product to the user's shopping cart.")]
-        public async Task<string> AddToCart([Description("The id of the product to add to the shopping cart (basket)")] int itemId)
-        {
-            try
-            {
-                var item = await chatState._catalogService.GetCatalogItem(itemId);
-                await chatState._basketState.AddAsync(item!);
-                return "Item added to shopping cart.";
-            }
-            catch (Grpc.Core.RpcException e) when (e.StatusCode == Grpc.Core.StatusCode.Unauthenticated)
-            {
-                return "Unable to add an item to the cart. You must be logged in.";
-            }
-            catch (Exception e)
-            {
-                return Error(e, "Unable to add the item to the cart.");
-            }
-        }
-
-        [KernelFunction, Description("Gets information about the contents of the user's shopping cart (basket)")]
-        public async Task<string> GetCartContents()
-        {
-            try
-            {
-                var basketItems = await chatState._basketState.GetBasketItemsAsync();
-                return JsonSerializer.Serialize(basketItems);
-            }
-            catch (Exception e)
-            {
-                return Error(e, "Unable to get the cart's contents.");
-            }
-        }
-
+        
         private string Error(Exception e, string message)
         {
             if (chatState._logger.IsEnabled(LogLevel.Error))

@@ -16,9 +16,6 @@ properties:
     registries:
     - server: {{ .Env.AZURE_CONTAINER_REGISTRY_ENDPOINT }}
       identity: {{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}
-    secrets:
-      - name: connectionstrings--eventbus
-        value: amqp://guest:{{ securedParameter "eventbus_password" }}@eventbus:5672
   template:
     containers:
     - image: {{ .Image }}
@@ -36,20 +33,10 @@ properties:
         value: "true"
       - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES
         value: "true"
-      - name: services__basket-api__http__0
-        value: http://basket-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: services__basket-api__https__0
-        value: https://basket-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: services__catalog-api__http__0
-        value: http://catalog-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: services__catalog-api__https__0
-        value: https://catalog-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: services__ordering-api__http__0
         value: http://ordering-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
       - name: services__ordering-api__https__0
         value: https://ordering-api.internal.{{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN }}
-      - name: ConnectionStrings__eventbus
-        secretRef: connectionstrings--eventbus
     scale:
       minReplicas: 1
 tags:

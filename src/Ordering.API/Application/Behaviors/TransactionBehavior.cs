@@ -6,14 +6,11 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
 {
     private readonly ILogger<TransactionBehavior<TRequest, TResponse>> _logger;
     private readonly OrderingContext _dbContext;
-    private readonly IOrderingIntegrationEventService _orderingIntegrationEventService;
 
     public TransactionBehavior(OrderingContext dbContext,
-        IOrderingIntegrationEventService orderingIntegrationEventService,
         ILogger<TransactionBehavior<TRequest, TResponse>> logger)
     {
         _dbContext = dbContext ?? throw new ArgumentException(nameof(OrderingContext));
-        _orderingIntegrationEventService = orderingIntegrationEventService ?? throw new ArgumentException(nameof(orderingIntegrationEventService));
         _logger = logger ?? throw new ArgumentException(nameof(ILogger));
     }
 
@@ -48,8 +45,6 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
 
                     transactionId = transaction.TransactionId;
                 }
-
-                await _orderingIntegrationEventService.PublishEventsThroughEventBusAsync(transactionId);
             });
 
             return response;
